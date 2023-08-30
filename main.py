@@ -4,6 +4,20 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import matplotlib.path as mpltPath
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "base",
+    type=str,
+    default="SC-Florianópolis",
+    help="State and city for base population and shape. Ex: SCFlorianópolis, SC-Florianópolis or 'SC-Braço do norte'")
+parser.add_argument(
+    "centroid",
+    type=str,
+    default="BA-Correntina",
+    help="State and city for centroid. Ex: SCFlorianópolis, SC-Florianópolis or 'SC-Braço do norte'"
+)
 
 
 def find_centroid(geo_data_city):
@@ -110,20 +124,16 @@ def load_popdata(csv_filename, pkl_filename):
     return pop_data
 
 
-def main(BC_city, BC_state, CC_city, CC_state):
+def main(BC_state_city: str, CC_state_city: str) -> None:
     """
     Receives the desired base-city, from which to use the population and shape; and center-city, around which to draw
     the region with same population.
 
     Args:
-        BC_city: str
-            Base-city's name.
-        BC_state: str
-            Base-city's state.
-        CC_city: str
-            Center-city's name.
-        CC_state: str
-            Center-city's name.
+        BC_state_city: str
+            Base state and city to use for population and shape.
+        CC_state_city: str
+            State and city to use for the centroid.
     """
 
     # Loads data
@@ -135,8 +145,11 @@ def main(BC_city, BC_state, CC_city, CC_state):
     geo_data_filename_pkl = 'files/geodata.pkl'
     geo_data = load_geodata(geo_data_filename_json, geo_data_filename_pkl)
 
+    assert BC_state_city in pop_data["UFMun"].values, f"State-city provided for reference '{BC_state_city}' is not in database"
+    assert CC_state_city in pop_data["UFMun"].values, f"State-city provided for centroid '{CC_state_city}' is not in database"
+
     # Relevant info from base-city
-    BC_pop_data = pop_data[pop_data['UFMun'] == BC_state + BC_city]
+    BC_pop_data = pop_data[pop_data['UFMun'] == BC_state_city]
     BC_pop = BC_pop_data['Pop'].item()
     BC_id = BC_pop_data['id'].item()
 
@@ -146,7 +159,7 @@ def main(BC_city, BC_state, CC_city, CC_state):
     BC_cnt = BC_geo_data['Center'].item()
 
     # Relevant info from center-city
-    CC_pop_data = pop_data[pop_data['UFMun'] == CC_state + CC_city]
+    CC_pop_data = pop_data[pop_data['UFMun'] == CC_state_city]
     CC_id = CC_pop_data['id'].item()
 
     CC_geo_data = geo_data[geo_data['id'] == CC_id]
@@ -225,10 +238,5 @@ def main(BC_city, BC_state, CC_city, CC_state):
 
 
 if __name__ == '__main__':
-    base_city = 'Florianópolis'
-    base_state = 'SC'
-
-    cntr_city = 'Correntina'
-    cntr_state = 'BA'
-
-    main(base_city, base_state, cntr_city, cntr_state)
+    args = parser.parse_args()
+    main(args.base.replace("-", ""), args.centroid.replace("-", ""))
