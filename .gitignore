@@ -4,3 +4,4 @@ Scripts/
 pyvenv.cfg
 files/geodata.pkl
 files/popdata.pkl
+venv/
